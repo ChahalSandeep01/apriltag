@@ -4,6 +4,8 @@ Apriltag :package:
 
 apriltag marker detection based on <https://github.com/ChahalSandeep/apriltag>
 
+It fixes some of issues caused when you download from pip.
+
 
 Dependencies
 ------------
