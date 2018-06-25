@@ -316,13 +316,13 @@ zarray_t* contour_detect(const image_u8_t* im8) {
       } 
 
       if (is_border) {
-
-        if (nbd == CCOUNT_MAX) {
-          fprintf(stderr, "warning: too many borders in contour_detect (max of %d!)\n", CCOUNT_MAX);
-          contour_destroy(contours);
-          cimage_destroy(im);
-          return NULL;
-        }
+//my change
+//        if (nbd == CCOUNT_MAX) {
+//          fprintf(stderr, "warning: too many borders in contour_detect (max of %d!)\n", CCOUNT_MAX);
+//          contour_destroy(contours);
+//          cimage_destroy(im);
+//          return NULL;
+//        }
         
         ++nbd;
 
