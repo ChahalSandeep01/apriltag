@@ -1381,6 +1381,11 @@ zarray_t *apriltag_detector_detect(apriltag_detector_t *td, image_u8_t *im_orig)
     zarray_sort(detections, detection_compare_function);
     timeprofile_stamp(td->tp, "cleanup");
 
+    //free((image_u8_t*)im_orig); //sandeep edit
+    image_u8_destroy(im_orig);
+    //free((image_u8_t*)quad_im); //sandeep's edit, already freed
+    //free((zarray_t*)s); // sandeep's edit doesn't work
+
     return detections;
 }
 
