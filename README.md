@@ -12,7 +12,7 @@ Dependencies
 
   - OpenCV (optional)
   
-Installation and Running
+Installation and Running  :nut_and_bolt:
 ------------------------
    1. Clone this repository in your system 
         ```commandline
@@ -26,7 +26,7 @@ Installation and Running
    
    Now you are all set
    
-How to use it in your code
+How to use it in your code  :computer:
 --------------------------
    ```python
 import apriltag # importing
