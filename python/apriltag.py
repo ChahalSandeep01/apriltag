@@ -8,6 +8,7 @@ tags.
 
 Original author: Isaac Dulin, Spring 2016
 Updates: Matt Zucker, Fall 2016
+Modifications; Sandeep Chahal
 
 """
 
@@ -186,57 +187,6 @@ argparse.ArgumentParser on which you have called add_arguments.
         self.debug = int(debug)
         self.quad_contours = quad_contours
 
-######################################################################
-
-def add_arguments(parser):
-
-    '''Add arguments to the given argparse.ArgumentParser object to enable
-passing in the resulting parsed arguments into the initializer for
-Detector.
-
-    '''
-
-    defaults = DetectorOptions()
-
-    show_default = ' (default %(default)s)'
-
-    parser.add_argument('-f', metavar='FAMILIES',
-                        dest='families', default=defaults.families,
-                        help='Tag families' + show_default)
-
-    parser.add_argument('-B', metavar='N',
-                        dest='border', type=int, default=defaults.border,
-                        help='Tag border size in pixels' + show_default)
-
-    parser.add_argument('-t', metavar='N',
-                        dest='nthreads', type=int, default=defaults.nthreads,
-                        help='Number of threads' + show_default)
-
-    parser.add_argument('-x', metavar='SCALE',
-                        dest='quad_decimate', type=float,
-                        default=defaults.quad_decimate,
-                        help='Quad decimation factor' + show_default)
-
-    parser.add_argument('-b', metavar='SIGMA',
-                        dest='quad_sigma', type=float, default=defaults.quad_sigma,
-                        help='Apply low-pass blur to input' + show_default)
-
-    parser.add_argument('-0', dest='refine_edges', default=True,
-                        action='store_false',
-                        help='Spend less time trying to align edges of tags')
-
-    parser.add_argument('-1', dest='refine_decode', default=False,
-                        action='store_true',
-                        help='Spend more time trying to decode tags')
-
-    parser.add_argument('-2', dest='refine_pose', default=False,
-                        action='store_true',
-                        help='Spend more time trying to precisely localize tags')
-
-    parser.add_argument('-c', dest='quad_contours', default=False,
-                        action='store_true',
-                        help='Use new contour-based quad detection')
-
 
 ######################################################################
 
@@ -273,7 +223,13 @@ add_arguments; or an instance of the DetectorOptions class.'''
             #relpath = os.path.join(selfdir, '../build/lib/', filename)
             relpath = os.path.join(selfdir, filename)
             if not os.path.exists(relpath):
-                raise
+                """new edit starts"""
+                # raise
+                relpath = os.path.join(os.getcwd(), '../build/lib', filename)
+
+                if not os.path.exists(relpath):
+                    raise
+                """new edit ends"""
             self.libc = ctypes.CDLL(relpath)
             
         # declare return types of libc function
@@ -299,6 +255,8 @@ add_arguments; or an instance of the DetectorOptions class.'''
             ptr = ctypes.c_char_p()
             self.libc.zarray_get(flist, i, ctypes.byref(ptr))
             self.families.append(ctypes.string_at(ptr))
+		
+        self.libc.apriltag_family_list_destroy(flist)  # sandeep's edit
 
         if options.families == 'all':
             families_list = self.families
@@ -311,6 +269,10 @@ add_arguments; or an instance of the DetectorOptions class.'''
         for family in families_list:
             self.add_tag_family(family)
 
+    def __del__(self):  # sandeep edit
+        self.libc.apriltag_detector_destroy(self.tag_detector)
+
+    #@profile
     def detect(self, img, return_image=False):
 
         '''Run detectons on the provided image. The image must be a grayscale
@@ -321,16 +283,25 @@ image of type numpy.uint8.'''
 
         c_img = self._convert_image(img)
 
+        """new edits starts"""
+
+        return_info = []
+        import resource
         #detect apriltags in the image
-        detections = self.libc.apriltag_detector_detect(self.tag_detector, c_img)
+        print "before", resource.getrusage(resource.RUSAGE_SELF).ru_maxrss
+        detections = self.libc.apriltag_detector_detect(self.tag_detector, c_img) #already in
+        print "after", resource.getrusage(resource.RUSAGE_SELF).ru_maxrss
 
         #create a pytags_info object
-        return_info = []
+        #return_info = []
+
+        apriltag = ctypes.POINTER(_ApriltagDetection)()
+        """new edit ends"""
 
         for i in range(0, detections.contents.size):
 
             #extract the data for each apriltag that was identified
-            apriltag = ctypes.POINTER(_ApriltagDetection)()
+            # apriltag = ctypes.POINTER(_ApriltagDetection)() # removed after new edit
             self.libc.zarray_get(detections, i, ctypes.byref(apriltag))
 
             tag = apriltag.contents
@@ -340,26 +311,32 @@ image of type numpy.uint8.'''
             corners = numpy.ctypeslib.as_array(tag.p, shape=(4, 2)).copy()
 
             detection = Detection(
-                tag.family.contents.name,
+                ctypes.string_at(tag.family.contents.name),
                 tag.id,
                 tag.hamming,
                 tag.goodness,
                 tag.decision_margin,
                 homography,
                 center,
-                corners)
+                corners) # tag.family.contents.name, #sandeeps edit
 
             #Append this dict to the tag data array
             return_info.append(detection)
-
+        """new edit starts"""
+        # self.libc.image_u8_destroy(c_img) # doesn't work
+        c_img = None
+        """new edit ends"""
         if return_image:
 
             dimg = self._vis_detections(img.shape, detections)
-            return return_info, dimg
+            rval = return_info, dimg
 
         else:
 
-            return return_info
+            rval = return_info
+
+        self.libc.apriltag_detections_destroy(detections)
+        return rval
 
 
     def add_tag_family(self, name):
@@ -380,8 +357,15 @@ image of type numpy.uint8.'''
         c_dimg = self.libc.image_u8_create(width, height)
         self.libc.apriltag_vis_detections(detections, c_dimg)
         tmp = _image_u8_get_array(c_dimg)
+        """new edit starts"""
 
-        return tmp[:, :width].copy()
+        rval = tmp[:, :width].copy()
+
+        self.libc.image_u8_destroy(c_dimg)
+
+        #return tmp[:, :width].copy()
+        return rval
+    """new edit ends"""
 
     def _declare_return_types(self):
 
@@ -410,72 +394,4 @@ image of type numpy.uint8.'''
         return c_img
 
 ######################################################################
-
-def main():
-
-    '''Test function for this Python wrapper.'''
-
-    from argparse import ArgumentParser
-
-    # for some reason pylint complains about members being undefined :(
-    # pylint: disable=E1101
-
-    try:
-        import cv2
-        have_cv2 = True
-    except ImportError:
-        have_cv2 = False
-        from PIL import Image
-
-    parser = ArgumentParser(
-        description='test apriltag Python bindings')
-
-    parser.add_argument('filenames', metavar='IMAGE', nargs='+',
-                        help='files to convert')
-
-    add_arguments(parser)
-
-    options = parser.parse_args()
-    det = Detector(options)
-
-    for filename in options.filenames:
-
-        if have_cv2:
-            orig = cv2.imread(filename)
-            if len(orig.shape) == 3:
-                gray = cv2.cvtColor(orig, cv2.COLOR_RGB2GRAY)
-            else:
-                gray = orig
-        else:
-            pil_image = Image.open(filename)
-            orig = numpy.array(pil_image)
-            gray = numpy.array(pil_image.convert('L'))
-
-        detections, dimg = det.detect(gray, return_image=True)
-
-        num_detections = len(detections)
-        print 'Detected {} tags.\n'.format(num_detections)
-
-        for i, detection in enumerate(detections):
-            print 'Detection {} of {}:'.format(i+1, num_detections)
-            print
-            print detection.tostring(indent=2)
-            print
-
-        if len(orig.shape) == 3:
-            overlay = orig / 2 + dimg[:, :, None] / 2
-        else:
-            overlay = gray / 2 + dimg / 2
-
-        if have_cv2:
-            cv2.imshow('win', overlay)
-            while cv2.waitKey(5) < 0:
-                pass
-        else:
-            output = Image.fromarray(overlay)
-            output.save('detections.png')
-
-if __name__ == '__main__':
-
-    main()
 
