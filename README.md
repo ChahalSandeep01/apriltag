@@ -36,9 +36,7 @@ result = detector.detect(img)  # calling method detect and it results april tag 
 print (result) 
    ```
 
-
-
-result is in the form of
+Results in the form of 
 
     [DetectionBase(tag_family='tag36h11', tag_id=2, hamming=0, goodness=0.0, decision_margin=98.58241271972656, homography=array([[ -1.41302664e-01,   1.08428082e+00,   1.67512900e+01],
        [ -8.75899366e-01,   1.50245469e-01,   1.70532040e+00],
@@ -48,7 +46,18 @@ result is in the form of
        [ 286.18066406,   43.48323059]])),
     DetectionBase(tag_family='tag36h11', ... etc
 
+How to use more information from it
+-----------------------------------
+once you have got it in results you can retrive information like below example
+```python
+for tags in result:
+    print tags.tag_id
+    print tags.corners
+    print tags.center
+    print tags.tag_family
+    print tags.decision_margin
 
+```
 
 
 .
