@@ -283,25 +283,25 @@ image of type numpy.uint8.'''
 
         c_img = self._convert_image(img)
 
-        """new edits starts"""
-
         return_info = []
-        import resource
-        #detect apriltags in the image
-        print "before", resource.getrusage(resource.RUSAGE_SELF).ru_maxrss
+        #import resource # related to memoryleak
+        #detect apriltags in the image # related to memoryleak
+        #print "before", resource.getrusage(resource.RUSAGE_SELF).ru_maxrss # related to memoryleak
+
         detections = self.libc.apriltag_detector_detect(self.tag_detector, c_img) #already in
-        print "after", resource.getrusage(resource.RUSAGE_SELF).ru_maxrss
+
+        #print "after", resource.getrusage(resource.RUSAGE_SELF).ru_maxrss # related to memoryleak
 
         #create a pytags_info object
-        #return_info = []
+        #return_info = [] #  commenting this line related to memoryleak
 
-        apriltag = ctypes.POINTER(_ApriltagDetection)()
+        apriltag = ctypes.POINTER(_ApriltagDetection)() # related to memoryleak
         """new edit ends"""
 
         for i in range(0, detections.contents.size):
 
             #extract the data for each apriltag that was identified
-            # apriltag = ctypes.POINTER(_ApriltagDetection)() # removed after new edit
+            # apriltag = ctypes.POINTER(_ApriltagDetection)() # commenting this line related to memoryleak
             self.libc.zarray_get(detections, i, ctypes.byref(apriltag))
 
             tag = apriltag.contents
@@ -322,10 +322,10 @@ image of type numpy.uint8.'''
 
             #Append this dict to the tag data array
             return_info.append(detection)
-        """new edit starts"""
+        #"""new edit starts"""
         # self.libc.image_u8_destroy(c_img) # doesn't work
-        c_img = None
-        """new edit ends"""
+        c_img = None # related to memory leak
+        #"""new edit ends"""
         if return_image:
 
             dimg = self._vis_detections(img.shape, detections)
