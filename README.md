@@ -1,22 +1,40 @@
 
-Apriltag
+Apriltag :package: 
 --------
-apriltag marker detection
-based on <https://github.com/swatbotics/apriltag>
+
+apriltag marker detection based on <https://github.com/ChahalSandeep/apriltag>
+
 
 Dependencies
 ------------
 
   - OpenCV (optional)
+  
+Installation and Running
+------------------------
+   1. Clone this repository in your system 
+        ```commandline
+        git clone https://github.com/ChahalSandeep01/apriltag.git
+        ```
+   2. Go to cloned folder and run setup.py
+        ```commandline
+        cd path/to/apriltag
+        python setup.py install
+        ```
+   
+   Now you are all set
+   
+How to use it in your code
+--------------------------
+   ```python
+import apriltag # importing
 
-Example
--------
+detector = apriltag.Detector() #creating an object of class Detector
 
-	import apriltag
-	import cv2
-	img = cv2.imread('apriltag_foto.jpg'.cv2.IMREAD_GRAYSCALE)
-	detector = apriltag.Detector()
-    result = detector.detect(img)
+result = detector.detect(img)  # calling method detect and it results april tag details
+
+print (result) 
+   ```
 
 
 
