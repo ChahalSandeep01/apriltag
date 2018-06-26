@@ -273,7 +273,7 @@ add_arguments; or an instance of the DetectorOptions class.'''
         self.libc.apriltag_detector_destroy(self.tag_detector)
 
     #@profile
-    def detect(self, img, return_image=False):
+    def detect(self, img, return_image=False, bot_cam=False):
 
         '''Run detectons on the provided image. The image must be a grayscale
 image of type numpy.uint8.'''
@@ -310,18 +310,23 @@ image of type numpy.uint8.'''
             center = numpy.ctypeslib.as_array(tag.c, shape=(2,)).copy()
             corners = numpy.ctypeslib.as_array(tag.p, shape=(4, 2)).copy()
 
-            detection = Detection(
-                ctypes.string_at(tag.family.contents.name),
-                tag.id,
-                tag.hamming,
-                tag.goodness,
-                tag.decision_margin,
-                homography,
-                center,
-                corners) # tag.family.contents.name, #sandeeps edit
+            if bot_cam:
 
-            #Append this dict to the tag data array
-            return_info.append(detection)
+                return_info.append(tag.id)
+
+            else:
+                detection = Detection(
+                    ctypes.string_at(tag.family.contents.name),
+                    tag.id,
+                    tag.hamming,
+                    tag.goodness,
+                    tag.decision_margin,
+                    homography,
+                    center,
+                    corners) # tag.family.contents.name, #sandeeps edit
+
+                #Append this dict to the tag data array
+                return_info.append(detection)
         #"""new edit starts"""
         # self.libc.image_u8_destroy(c_img) # doesn't work
         c_img = None # related to memory leak
