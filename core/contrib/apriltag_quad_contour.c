@@ -462,13 +462,13 @@ static inline int lines_from_corners_contour(const apriltag_detector_t* td,
     int start = idx[i];
     int count = (idx[j]-idx[i]+n+1)%n;
 
-    if (count < 8) { // not sure why below assert was here, added safety code?
-      fprintf(stderr, "%s:%d: warning: count < 8 :(\n",
-              __FILE__, __LINE__);
-      return 0;
-    }
+//    if (count < 8) { // not sure why below assert was here, added safety code?
+//      fprintf(stderr, "%s:%d: warning: count < 8 :(\n",
+//              __FILE__, __LINE__);
+//      return 1;
+//    }
         
-    assert( count >= 8 );
+//    assert( count >= 8 );
 
     int corner_skip = count * td->qcp.corner_skip_scl + td->qcp.corner_skip_bias;
     corner_skip = corner_skip > count/4 ? count/4 : corner_skip;
