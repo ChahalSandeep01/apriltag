@@ -9,7 +9,8 @@ It fixes some of issues caused when you download from pip.
 
 Dependencies
 ------------
-
+  - python
+  - cmake
   - OpenCV (optional)
   
 Installation and Running  :nut_and_bolt:
