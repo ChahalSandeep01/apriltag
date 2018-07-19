@@ -10,6 +10,7 @@ It fixes some of issues caused when you download from pip.
 Dependencies
 ------------
   - python
+  - python-setuptools
   - cmake
   - OpenCV (optional)
   
